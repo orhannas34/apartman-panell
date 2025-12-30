@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Apartman Bilgi Paneli</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{font-family:Arial;background:#f4f6f8;margin:0}
+header{background:#1f2937;color:#fff;padding:15px;text-align:center}
+.search{padding:10px;background:#fff}
+.search input{width:100%;padding:12px;font-size:16px}
+table{width:100%;border-collapse:collapse;background:#fff}
+th,td{padding:10px;border-bottom:1px solid #ddd}
+th{background:#f1f5f9;text-align:left}
+
+.form{
+  background:#fff;
+  margin:15px;
+  padding:15px;
+  border-radius:8px
+}
+.form h3{margin-top:0}
+.form input,.form textarea{
+  width:100%;
+  padding:10px;
+  margin-bottom:10px;
+  font-size:15px
+}
+.form button{
+  background:#2563eb;
+  color:#fff;
+  padding:10px;
+  border:none;
+  width:100%;
+  font-size:16px;
+  border-radius:6px
+}
+.ok{color:green}
+.err{color:red}
+</style>
+</head>
+
+<body>
+
+<header>
+<h2>Apartman Daire Bilgi Listesi</h2>
+</header>
+
+<div class="search">
+<input type="text" id="arama" placeholder="Plaka, Daire veya İsim ara">
+</div>
+
+<table>
+<thead>
+<tr>
+<th>Daire</th>
+<th>Ad Soyad</th>
+<th>Plaka</th>
+<th>Açıklama</th>
+</tr>
+</thead>
+<tbody id="liste"></tbody>
+</table>
+
+<!-- MESAJ FORMU -->
+<div class="form">
+<h3>📩 Yönetime Mesaj Gönder</h3>
+<input id="m_ad" placeholder="Ad Soyad">
+<input id="m_daire" placeholder="Daire">
+<textarea id="m_mesaj" placeholder="Mesajınız"></textarea>
+<button onclick="gonder()">Gönder</button>
+<div id="sonuc"></div>
+</div>
+
+<script>
+/* ===== AYARLAR ===== */
+const sheetID="17AfpvegMnwNjUni31QpyU7XDPiNxMuuWnI8M4GXpSsA";
+const dataURL=`https://opensheet.elk.sh/${sheetID}/Veriler`;
+
+/* 🔴 BURAYA KENDİ APPS SCRIPT /exec URL'İN GELECEK */
+const postURL="https://script.google.com/macros/s/AKfycbXXXXXXXXXXXX/exec";
+
+let veri=[];
+
+/* ===== VERİLERİ ÇEK ===== */
+fetch(dataURL)
+.then(r=>r.json())
+.then(d=>{
+  veri=d.filter(x=>String(x.aktif)!=="0");
+  doldur();
+});
+
+function n(v){return (v||"").toLowerCase().replace(/\s+/g,"")}
+
+function doldur(q=""){
+  let h="";
+  veri.filter(x=>
+    !q||
+    n(x.plaka).includes(n(q))||
+    n(x.adsoyad).includes(n(q))||
+    n(x.daire).includes(n(q))
+  ).forEach(x=>{
+    h+=`
+    <tr>
+      <td>${x.daire}</td>
+      <td>${x.adsoyad}</td>
+      <td>${x.plaka}</td>
+      <td>${x.aciklama||"-"}</td>
+    </tr>`;
+  });
+  liste.innerHTML=h;
+}
+
+arama.addEventListener("input",e=>doldur(e.target.value));
+
+/* ===== MESAJ GÖNDER (DÜZELTİLDİ) ===== */
+function gonder(){
+  let data={
+    adsoyad:m_ad.value.trim(),
+    daire:m_daire.value.trim(),
+    mesaj:m_mesaj.value.trim()
+  };
+
+  if(!data.mesaj){
+    sonuc.innerHTML="<span class='err'>Mesaj boş olamaz</span>";
+    return;
+  }
+
+  sonuc.innerHTML="Gönderiliyor...";
+
+  fetch(postURL,{
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },
+    body:JSON.stringify(data)
+  })
+  .then(r=>r.text())
+  .then(t=>{
+    console.log("SCRIPT CEVABI:", t);
+
+    if(t.includes('"status":"ok"')){
+      sonuc.innerHTML="<span class='ok'>Mesaj Sheet'e kaydedildi ✔</span>";
+      m_mesaj.value="";
+    }else{
+      sonuc.innerHTML="<span class='err'>Hata: "+t+"</span>";
+    }
+  })
+  .catch(err=>{
+    console.error(err);
+    sonuc.innerHTML="<span class='err'>Bağlantı hatası</span>";
+  });
+}
+</script>
+
+</body>
+</html>
