@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Apartman Yönetim Paneli</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:Arial;background:#f1f5f9;margin:0}
+.card{background:#fff;margin:14px;padding:14px;border-radius:12px}
+input,textarea,button{width:100%;padding:10px;margin-top:6px}
+button{background:#16a34a;color:#fff;border:none}
+</style>
+</head>
+<body>
+
+<div class="card">
+<h3>📩 Yöneticiye Mesaj</h3>
+<input id="ad" placeholder="Adınız">
+<textarea id="mesaj" placeholder="Mesajınız"></textarea>
+<button onclick="gonder()">Gönder</button>
+</div>
+
+<div class="card">
+<h3>🧪 Test – Sheet Güncelle</h3>
+<button onclick="testUpdate()">Test Kaydet</button>
+</div>
+
+<script>
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyYXxtfA-H0OytTGyVae-ouA8oa9Ly9niA7FIleYAE9OwX0RENzqR0BmOSiSSdiE5QT/exec";
+
+function gonder(){
+  fetch(GAS_URL,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      action:"mesaj",
+      ad:document.getElementById("ad").value,
+      mesaj:document.getElementById("mesaj").value
+    })
+  })
+  .then(r=>r.text())
+  .then(t=>alert(t))
+  .catch(e=>alert("HATA: "+e));
+}
+
+function testUpdate(){
+  fetch(GAS_URL,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      action:"update",
+      row:2,
+      daire:"D1",
+      adsoyad:"Test Kullanıcı",
+      plaka:"34 ABC 123",
+      aciklama:"ÇALIŞIYOR",
+      foto:"",
+      aktif:"1"
+    })
+  })
+  .then(r=>r.text())
+  .then(t=>alert(t));
+}
+</script>
+
+</body>
+</html>
